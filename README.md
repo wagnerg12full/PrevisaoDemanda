@@ -79,6 +79,13 @@ Use o app Expo Go no celular para escanear o QR Code.
 
 Certifique-se de que o BASE_URL no arquivo predict.tsx aponta para o IP da sua máquina na rede.
 
+
+### 🖼️ Visualização do Sistema
+
+![Previsão de Demanda](predict.jpeg)
+
+![Detalhes da Previsão](detail.jpeg)
+
 ## 📊 Níveis de Criticidade
 
 Para evitar a "diluição de médias", o sistema utiliza uma escala de cores baseada em desvios estatísticos:

@@ -62,10 +62,23 @@ pip install -r backend/requirements.txt
 
 ### 2. Executando o Backend (API)
 
+#### Modo Produção (dados reais):
 ```
 # De dentro da pasta raiz
 python3 backend/run.py
 ```
+
+#### Modo Desenvolvimento (dados de teste):
+```
+# Para desenvolvimento local, use o parâmetro 'dev'
+python3 backend/run.py dev
+```
+
+**Importante para desenvolvedores:** 
+- Os arquivos CSV de produção (`modelo_previsao_demanda_agregado.csv`, `centros_clusters.csv`, `dados_analiticos_clusters.csv`) não estão incluídos no repositório
+- Para desenvolvimento local, use o modo `dev` que automaticamente carrega os arquivos de teste da pasta `backend/test/`
+- O pipeline de processamento (`pipeline_processamento.py`) gera os CSVs na pasta `backend/` quando executado com dados reais
+
 A API estará disponível em http://localhost:8000. Você pode testar via Swagger em /docs.
 
 ### 3. Executando o Mobile (Expo)

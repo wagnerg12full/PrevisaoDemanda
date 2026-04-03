@@ -1,4 +1,5 @@
 import os
+import sys
 import uvicorn
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -7,18 +8,33 @@ from datetime import datetime
 
 app = FastAPI(title="Previsão de Demanda - API")
 
-# Configuração de caminhos para evitar erro de arquivo não encontrado
+# Configuração de caminhos baseada no ambiente
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODELO_PATH = os.path.join(BASE_DIR, 'modelo_previsao_demanda_agregado.csv')
-CLUSTERS_PATH = os.path.join(BASE_DIR, 'centros_clusters.csv')
+
+# Verificar se estamos em modo de desenvolvimento
+IS_DEV_MODE = len(sys.argv) > 1 and sys.argv[1].lower() == 'dev'
+
+if IS_DEV_MODE:
+    print("🚀 MODO DESENVOLVIMENTO ATIVADO - Usando dados de teste")
+    DATA_DIR = os.path.join(BASE_DIR, 'test')
+else:
+    print("⚡ MODO PRODUÇÃO - Usando dados do diretório principal")
+    DATA_DIR = BASE_DIR
+
+# Configurar caminhos dos CSVs
+MODELO_PATH = os.path.join(DATA_DIR, 'modelo_previsao_demanda_agregado.csv')
+CLUSTERS_PATH = os.path.join(DATA_DIR, 'centros_clusters.csv')
+ANALITICO_PATH = os.path.join(DATA_DIR, 'dados_analiticos_clusters.csv')
 
 # Carregamento dos dados
 try:
     df_modelo = pd.read_csv(MODELO_PATH)
     df_clusters = pd.read_csv(CLUSTERS_PATH)
-    print("✅ Dados e Clusters carregados com sucesso!")
+    print(f"✅ Dados e Clusters carregados com sucesso de: {DATA_DIR}")
 except Exception as e:
     print(f"❌ Erro crítico ao carregar CSVs: {e}")
+    print(f"📁 Diretório atual: {DATA_DIR}")
+    print(f"📄 Arquivos disponíveis: {os.listdir(DATA_DIR) if os.path.exists(DATA_DIR) else 'Diretório não existe'}")
 
 # Schema padronizado como 'hour'
 class PredictionRequest(BaseModel):
@@ -39,9 +55,11 @@ from typing import List, Optional
 
 # Carregamento do dataset completo (apenas as 71k linhas filtradas)
 try:
-    df_analitico = pd.read_csv(os.path.join(BASE_DIR, 'dados_analiticos_clusters.csv'))
+    df_analitico = pd.read_csv(ANALITICO_PATH)
+    print(f"✅ Dataset analítico carregado de: {ANALITICO_PATH}")
 except Exception as e:
     print(f"❌ Erro ao carregar dataset analítico: {e}")
+    print(f"📁 Tentou carregar de: {ANALITICO_PATH}")
 
 @app.post("/cluster-detail")  # Mudamos para POST
 async def get_cluster_detail(request: ClusterDetailRequest): # Agora recebe o objeto
@@ -123,4 +141,20 @@ async def predict_demand(request: PredictionRequest):
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
 if __name__ == "__main__":
+    # Mostrar modo ativo
+    if IS_DEV_MODE:
+        print("=" * 50)
+        print("🚀 SERVIDOR INICIADO EM MODO DESENVOLVIMENTO")
+        print("📁 Usando dados de: backend/test/")
+        print("🌐 API disponível em: http://localhost:8000")
+        print("📚 Documentação: http://localhost:8000/docs")
+        print("=" * 50)
+    else:
+        print("=" * 50)
+        print("⚡ SERVIDOR INICIADO EM MODO PRODUÇÃO")
+        print("📁 Usando dados de: backend/")
+        print("🌐 API disponível em: http://localhost:8000")
+        print("📚 Documentação: http://localhost:8000/docs")
+        print("=" * 50)
+    
     uvicorn.run(app, host="0.0.0.0", port=8000)
